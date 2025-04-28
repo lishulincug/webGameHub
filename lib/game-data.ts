@@ -3,6 +3,7 @@ import { BlockEliminationGame } from "@/components/games/block-elimination-game"
 import { PlaneShooterGame } from "@/components/games/plane-shooter-game"
 import { JumpAdventureGame } from "@/components/games/jump-adventure-game"
 import { RacingGame } from "@/components/games/racing-game"
+import { TetrisGame } from "@/components/games/tetris"
 
 export interface GameType {
   id: number
@@ -74,5 +75,13 @@ export const games: GameType[] = [
     description: "猜测隐藏的单词，挑战你的词汇量",
     image: "/placeholder.svg?height=200&width=300",
     category: "文字",
+  },
+  {
+    id: 9,
+    title: "俄罗斯方块",
+    description: "经典的俄罗斯方块游戏，旋转和移动方块消除行",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "益智",
+    component: TetrisGame,
   },
 ]
