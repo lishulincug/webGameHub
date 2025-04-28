@@ -4,6 +4,7 @@ import { PlaneShooterGame } from "@/components/games/plane-shooter-game"
 import { JumpAdventureGame } from "@/components/games/jump-adventure-game"
 import { RacingGame } from "@/components/games/racing-game"
 import { TetrisGame } from "@/components/games/tetris"
+import { FlappyBirdGame } from "@/components/games/flappy-bird-game"
 
 export interface GameType {
   id: number
@@ -83,5 +84,13 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: TetrisGame,
+  },
+  {
+    id: 10,
+    title: "Flappy Bird",
+    description: "控制小鸟飞行，穿过管道间的缝隙获得分数",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "休闲",
+    component: FlappyBirdGame,
   },
 ]
