@@ -5,6 +5,10 @@ import { JumpAdventureGame } from "@/components/games/jump-adventure-game"
 import { RacingGame } from "@/components/games/racing-game"
 import { TetrisGame } from "@/components/games/tetris"
 import { FlappyBirdGame } from "@/components/games/flappy-bird-game"
+import { SudokuGame } from "@/components/games/sudoku-game"
+import { MemoryMatchGame } from "@/components/games/memory-match-game"
+import { MazeGame } from "@/components/games/maze-game"
+import { WordGuessGame } from "@/components/games/word-guess-game"
 
 export interface GameType {
   id: number
@@ -13,6 +17,7 @@ export interface GameType {
   image: string
   category: string
   component?: React.ComponentType<any>
+  previewImage?: string
 }
 
 // 游戏数据
@@ -24,6 +29,8 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: BlockEliminationGame,
+    previewImage:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/block-elimination-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 2,
@@ -32,6 +39,8 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "射击",
     component: PlaneShooterGame,
+    previewImage:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/plane-shooter-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 3,
@@ -40,6 +49,8 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "平台",
     component: JumpAdventureGame,
+    previewImage:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/jump-adventure-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 5,
@@ -48,6 +59,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "竞速",
     component: RacingGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/racing-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 4,
@@ -55,6 +67,8 @@ export const games: GameType[] = [
     description: "填充数字，完成经典数独游戏",
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
+    component: SudokuGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sudoku-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 6,
@@ -62,6 +76,8 @@ export const games: GameType[] = [
     description: "翻转卡片，找到配对的图案",
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
+    component: MemoryMatchGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/memory-match-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 7,
@@ -69,6 +85,8 @@ export const games: GameType[] = [
     description: "在复杂的迷宫中找到出路",
     image: "/placeholder.svg?height=200&width=300",
     category: "冒险",
+    component: MazeGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/maze-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 8,
@@ -76,6 +94,8 @@ export const games: GameType[] = [
     description: "猜测隐藏的单词，挑战你的词汇量",
     image: "/placeholder.svg?height=200&width=300",
     category: "文字",
+    component: WordGuessGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/word-guess-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 9,
@@ -84,6 +104,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: TetrisGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tetris-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
   {
     id: 10,
@@ -92,5 +113,6 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: FlappyBirdGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/flappy-bird-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
 ]

@@ -9,7 +9,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { GameCategoryFilter } from "@/components/game-category-filter"
 import { Input } from "@/components/ui/input"
-import { Search, X } from "lucide-react"
+import { Search, X, Play } from "lucide-react"
 import { games } from "@/lib/game-data"
 
 export function GameGrid() {
@@ -18,6 +18,7 @@ export function GameGrid() {
   const [activeCategory, setActiveCategory] = useState("全部")
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredGames, setFilteredGames] = useState(games)
+  const [isHovering, setIsHovering] = useState<number | null>(null)
 
   useEffect(() => {
     let result = games
@@ -74,9 +75,31 @@ export function GameGrid() {
       {filteredGames.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredGames.map((game) => (
-            <Card key={game.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <Card
+              key={game.id}
+              className="overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              onMouseEnter={() => setIsHovering(game.id)}
+              onMouseLeave={() => setIsHovering(null)}
+            >
               <div className="aspect-video relative">
-                <Image src={game.image || "/placeholder.svg"} alt={game.title} fill className="object-cover" />
+                <Image
+                  src={game.previewImage || game.image || "/placeholder.svg"}
+                  alt={game.title}
+                  fill
+                  className="object-cover"
+                />
+                {isHovering === game.id && game.component && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="rounded-full w-12 h-12"
+                      onClick={() => handlePlayGame(game)}
+                    >
+                      <Play className="h-6 w-6" />
+                    </Button>
+                  </div>
+                )}
               </div>
               <CardHeader className="p-4">
                 <div className="flex justify-between items-start">
