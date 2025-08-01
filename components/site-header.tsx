@@ -30,6 +30,17 @@ export function SiteHeader() {
             <span className="sr-only">搜索</span>
           </Button>
         </div>
+        <div className="absolute right-5 top-5 z-10">
+          <a 
+            href="https://codeprogramcug.github.io/autoSignIn/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Button className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white">
+              <span>游戏中心</span>
+            </Button>
+          </a>
+        </div>
       </div>
     </header>
   )
