@@ -37,7 +37,7 @@ export function SiteHeader() {
             rel="noopener noreferrer"
           >
             <Button className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white">
-              <span>游戏中心</span>
+              <span>福利中心</span>
             </Button>
           </a>
         </div>
