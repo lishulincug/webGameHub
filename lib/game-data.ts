@@ -9,6 +9,7 @@ import { SudokuGame } from "@/components/games/sudoku-game"
 import { MemoryMatchGame } from "@/components/games/memory-match-game"
 import { MazeGame } from "@/components/games/maze-game"
 import { WordGuessGame } from "@/components/games/word-guess-game"
+import { DoudizhuGame } from "@/components/games/doudizhu-game"
 
 export interface GameType {
   id: number
@@ -113,6 +114,15 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: FlappyBirdGame,
+    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/flappy-bird-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
+  },
+  {
+    id: 11,
+    title: "斗地主",
+    description: "斗地主",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "扑克",
+    component: DoudizhuGame,
     previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/flappy-bird-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
   },
 ]
