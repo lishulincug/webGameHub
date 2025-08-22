@@ -37,7 +37,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: BlockEliminationGame,
-    previewImage: "/images/game-previews/block-elimination-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/block-elimination-preview.png`,
   },
   {
     id: 2,
@@ -46,7 +46,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "射击",
     component: PlaneShooterGame,
-    previewImage: "/images/game-previews/plane-shooter-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/plane-shooter-preview.png`,
   },
   {
     id: 3,
@@ -55,7 +55,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "平台",
     component: JumpAdventureGame,
-    previewImage: "/images/game-previews/jump-adventure-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/jump-adventure-preview.png`,
   },
   {
     id: 5,
@@ -64,7 +64,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "竞速",
     component: RacingGame,
-    previewImage: "/images/game-previews/racing-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/racing-preview.png`,
   },
   {
     id: 4,
@@ -73,7 +73,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: SudokuGame,
-    previewImage: "/images/game-previews/sudoku-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/sudoku-preview.png`,
   },
   {
     id: 6,
@@ -82,7 +82,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: MemoryMatchGame,
-    previewImage: "/images/game-previews/memory-match-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/memory-match-preview.png`,
   },
   {
     id: 7,
@@ -91,7 +91,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "冒险",
     component: MazeGame,
-    previewImage: "/images/game-previews/maze-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/maze-preview.png`,
   },
   {
     id: 8,
@@ -100,7 +100,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "文字",
     component: WordGuessGame,
-    previewImage: "/images/game-previews/word-guess-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/word-guess-preview.png`,
   },
   {
     id: 9,
@@ -109,7 +109,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: TetrisGame,
-    previewImage: "/images/game-previews/tetris-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/tetris-preview.png`,
   },
   {
     id: 10,
@@ -118,7 +118,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: FlappyBirdGame,
-    previewImage: "/images/game-previews/flappy-bird-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/flappy-bird-preview.png`,
   },
   {
     id: 11,
@@ -127,7 +127,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: GomokuGame,
-    previewImage: "/images/game-previews/gomoku-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/gomoku-preview.png`,
   },
   {
     id: 12,
@@ -136,7 +136,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: ChineseChessGame,
-    previewImage: "/images/game-previews/chinese-chess-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/chinese-chess-preview.png`,
   },
   {
     id: 13,
@@ -145,7 +145,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: GoGame,
-    previewImage: "/images/game-previews/go-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/go-preview.png`,
   },
   {
     id: 14,
@@ -154,7 +154,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: ArmyChessGame,
-    previewImage: "/images/game-previews/army-chess-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/army-chess-preview.png`,
   },
   {
     id: 15,
@@ -163,7 +163,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "模拟",
     component: DroneSimulator,
-    previewImage: "/images/game-previews/drone-simulator-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/drone-simulator-preview.png`,
   },
   {
     id: 16,
@@ -172,7 +172,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "模拟",
     component: FlightSimulator,
-    previewImage: "/images/game-previews/flight-simulator-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/flight-simulator-preview.png`,
   },
   {
     id: 17,
@@ -181,7 +181,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "模拟",
     component: CarSimulator,
-    previewImage: "/images/game-previews/car-simulator-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/car-simulator-preview.png`,
   },
   {
     id: 18,
@@ -190,6 +190,6 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "扑克",
     component: DoudizhuGame,
-    previewImage: "/images/game-previews/doudizhu-preview.png",
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/doudizhu-preview.png`,
   },
 ]

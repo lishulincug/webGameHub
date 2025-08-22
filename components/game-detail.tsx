@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowLeft, Clock, GamepadIcon as GameController, MessageSquare, Star, ThumbsUp, Users } from "lucide-react"
+import { ArrowLeft, Clock, PaintRoller as GameController, MessageSquare, Star, ThumbsUp, Users } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -81,12 +81,29 @@ const DIFFICULTY: Record<number, { level: string; stars: number }> = {
   6: { level: "简单", stars: 2 },
   7: { level: "困难", stars: 4 },
   8: { level: "中等", stars: 3 },
+  9: { level: "中等", stars: 3 },
+  10: { level: "简单", stars: 2 },
+  11: { level: "中等", stars: 3 },
+  12: { level: "困难", stars: 4 },
+  13: { level: "困难", stars: 5 },
+  14: { level: "中等", stars: 3 },
+  15: { level: "困难", stars: 4 },
+  16: { level: "困难", stars: 5 },
+  17: { level: "困难", stars: 4 },
 }
 
 // 游戏说明
 const GAME_INSTRUCTIONS: Record<number, string> = {
   1: "方块消除是一款经典的消除类游戏。游戏规则很简单：点击相邻的相同颜色方块来消除它们。消除的方块越多，获得的分数就越高。游戏有60秒的时间限制，在时间结束前尽可能获得高分。\n\n游戏技巧：\n- 优先寻找大片相同颜色的方块\n- 从底部开始消除，可能会触发连锁反应\n- 注意时间，合理规划消除策略",
   2: "飞机大战是一款经典的射击游戏。玩家控制一架飞机，躲避敌机并发射子弹击落它们。每击落一架敌机可以获得10分。玩家有3条生命，与敌机相撞会损失一条生命，生命耗尽游戏结束。\n\n操作方法：\n- 使用方向键或WASD移动飞机\n- 按空格键发射子弹\n\n游戏技巧：\n- 保持移动，不要停留在一个位置\n- 优先击落靠近的敌机\n- 注意屏幕边缘，避免被限制移动",
+  3: "跳跃冒险是一款平台跳跃游戏。玩家控制角色在平台间跳跃，收集金币并尽可能向上攀登。游戏具有物理引擎，角色会受到重力影响。\n\n操作方法：\n- 使用方向键或WASD移动角色\n- 空格键或上方向键跳跃\n\n游戏技巧：\n- 掌握跳跃时机，避免掉落\n- 收集金币可以获得额外分数\n- 利用平台的弹性进行连续跳跃",
+  4: "数独挑战是经典的数字逻辑游戏。在9x9的网格中填入数字1-9，使每行、每列和每个3x3的小方格都包含1-9的数字，且不重复。\n\n游戏规则：\n- 每行必须包含1-9的数字\n- 每列必须包含1-9的数字\n- 每个3x3方格必须包含1-9的数字\n\n游戏技巧：\n- 从数字较多的行列开始\n- 使用排除法确定数字位置\n- 可以使用提示功能获得帮助",
+  5: "赛车竞速是一款3D赛车游戏。玩家驾驶赛车在赛道上竞速，避开障碍物并尽可能多地完成圈数。游戏具有真实的物理引擎和车辆操控感。\n\n操作方法：\n- 使用方向键或WASD控制赛车\n- 上/W加速，下/S减速\n- 左右/AD转向\n\n游戏技巧：\n- 在弯道前适当减速\n- 避免与障碍物碰撞\n- 掌握转向时机，保持最佳路线",
+  6: "记忆配对是一款考验记忆力的游戏。翻转卡片找到相同的图案进行配对，用最少的步数完成所有配对。\n\n游戏规则：\n- 每次可以翻开两张卡片\n- 如果图案相同则配对成功\n- 如果不同则重新翻回\n\n游戏技巧：\n- 记住已经翻开过的卡片位置\n- 优先翻开记忆中的配对卡片\n- 保持专注，提高记忆效率",
+  7: "迷宫探险是一款探索类游戏。在随机生成的迷宫中找到出路，收集金币获得更高分数。迷宫具有多种难度等级。\n\n操作方法：\n- 使用方向键或WASD移动角色\n- 收集路径上的金币\n\n游戏技巧：\n- 记住走过的路径，避免重复\n- 优先收集金币增加分数\n- 可以沿着墙壁行走寻找出口",
+  8: "单词猜谜是一款文字游戏。根据提示猜测隐藏的单词，每次错误猜测会失去一条生命。游戏有多个难度等级。\n\n游戏规则：\n- 根据提示猜测单词\n- 错误猜测会失去生命\n- 生命耗尽游戏结束\n\n游戏技巧：\n- 仔细阅读提示信息\n- 从常见字符开始猜测\n- 可以使用提示功能获得帮助",
+  9: "俄罗斯方块是经典的益智游戏。控制下落的方块，通过旋转和移动将它们排列成完整的行来消除。游戏速度会逐渐加快。\n\n操作方法：\n- 方向键左右移动方块\n- 上方向键旋转方块\n- 下方向键加速下落\n\n游戏技巧：\n- 提前规划方块的放置位置\n- 尽量避免留下空隙\n- 保持冷静，随着速度加快调整策略",
+  10: "Flappy Bird是一款简单但具有挑战性的游戏。控制小鸟飞行，穿过管道间的缝隙获得分数。游戏操作简单但需要精确的时机掌握。\n\n操作方法：\n- 点击屏幕或按空格键让小鸟飞起\n- 松开让小鸟下落\n\n游戏技巧：\n- 保持稳定的节奏\n- 提前预判管道位置\n- 练习掌握小鸟的飞行轨迹",
 }
 
 export function GameDetail({ game }: { game: GameType }) {
@@ -133,7 +150,7 @@ export function GameDetail({ game }: { game: GameType }) {
   const GameComponent = game.component
     ? game.component
     : () => (
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center justify-center min-h-[600px]">
           <div className="text-center space-y-4">
             <h3 className="text-xl font-bold">游戏开发中...</h3>
             <p className="text-muted-foreground">这个游戏正在开发中，敬请期待！</p>
@@ -150,8 +167,8 @@ export function GameDetail({ game }: { game: GameType }) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-3">
           <div className="mb-6">
             <h1 className="text-3xl font-bold tracking-tight">{game.title}</h1>
             <div className="mt-2 flex items-center space-x-2">
@@ -176,7 +193,9 @@ export function GameDetail({ game }: { game: GameType }) {
             <TabsContent value="play" className="mt-4">
               <Card>
                 <CardContent className="p-6">
-                  <GameComponent />
+                  <div style={{ minHeight: "600px" }}>
+                    <GameComponent />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -271,7 +290,12 @@ export function GameDetail({ game }: { game: GameType }) {
           <Card>
             <CardContent className="p-6">
               <div className="aspect-video relative mb-4 overflow-hidden rounded-lg">
-                <Image src={game.image || "/placeholder.svg"} alt={game.title} fill className="object-cover" />
+                <Image
+                  src={game.previewImage || game.image || "/placeholder.svg"}
+                  alt={game.title}
+                  fill
+                  className="object-cover"
+                />
               </div>
 
               <div className="space-y-4">
