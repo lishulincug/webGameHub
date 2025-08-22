@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 
-const categories = ["全部", "休闲", "射击", "平台", "益智", "竞速", "冒险", "文字", "扑克"]
+const categories = ["全部", "休闲", "射击", "平台", "益智", "竞速", "冒险", "文字", "扑克", "模拟"]
 
 export function GameCategoryFilter({
   activeCategory = "全部",

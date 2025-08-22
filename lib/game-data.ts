@@ -14,6 +14,9 @@ import { GomokuGame } from "@/components/games/gomoku-game"
 import { ChineseChessGame } from "@/components/games/chinese-chess-game"
 import { GoGame } from "@/components/games/go-game"
 import { ArmyChessGame } from "@/components/games/army-chess-game"
+import { DroneSimulator } from "@/components/games/drone-simulator"
+import { FlightSimulator } from "@/components/games/flight-simulator"
+import { CarSimulator } from "@/components/games/car-simulator"
 
 export interface GameType {
   id: number
@@ -154,12 +157,39 @@ export const games: GameType[] = [
     previewImage: "/images/game-previews/army-chess-preview.png",
   },
   {
+    id: 15,
+    title: "无人机模拟器",
+    description: "3D无人机飞行模拟，体验真实的飞行操控",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "模拟",
+    component: DroneSimulator,
+    previewImage: "/images/game-previews/drone-simulator-preview.png",
+  },
+  {
     id: 16,
+    title: "飞行模拟器",
+    description: "专业飞行模拟体验，驾驶飞机穿越云层",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "模拟",
+    component: FlightSimulator,
+    previewImage: "/images/game-previews/flight-simulator-preview.png",
+  },
+  {
+    id: 17,
+    title: "汽车驾驶模拟器",
+    description: "真实的汽车驾驶体验，挑战赛道圈速记录",
+    image: "/placeholder.svg?height=200&width=300",
+    category: "模拟",
+    component: CarSimulator,
+    previewImage: "/images/game-previews/car-simulator-preview.png",
+  },
+  {
+    id: 18,
     title: "斗地主",
     description: "斗地主",
     image: "/placeholder.svg?height=200&width=300",
     category: "扑克",
     component: DoudizhuGame,
-    previewImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/flappy-bird-preview-Yx9Yd9Yx9Yd9Yx9Yd9.png",
+    previewImage: "/images/game-previews/doudizhu-preview.png",
   },
 ]
