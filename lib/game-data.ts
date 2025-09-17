@@ -37,7 +37,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "休闲",
     component: BlockEliminationGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/block-elimination-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/方块消除.jpg`,
   },
   {
     id: 2,
@@ -46,7 +46,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "射击",
     component: PlaneShooterGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/plane-shooter-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/飞机大战.jpg`,
   },
   {
     id: 3,
@@ -55,7 +55,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "平台",
     component: JumpAdventureGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/jump-adventure-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/跳跃冒险.jpg`,
   },
   {
     id: 5,
@@ -64,7 +64,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "竞速",
     component: RacingGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/racing-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/赛车竞速.jpg`,
   },
   {
     id: 4,
@@ -73,7 +73,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: SudokuGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/sudoku-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/数独挑战.jpg`,
   },
   {
     id: 6,
@@ -82,7 +82,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "益智",
     component: MemoryMatchGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/memory-match-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/记忆配对.jpg`,
   },
   {
     id: 7,
@@ -91,7 +91,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "冒险",
     component: MazeGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/maze-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/迷宫探险.jpg`,
   },
   {
     id: 8,
@@ -100,7 +100,7 @@ export const games: GameType[] = [
     image: "/placeholder.svg?height=200&width=300",
     category: "文字",
     component: WordGuessGame,
-    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/word-guess-preview.png`,
+    previewImage: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/game-previews/单词猜谜.jpg`,
   },
   {
     id: 9,

@@ -1,696 +1,114 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import type React from "react"
+
+import { useEffect, useRef, useState, useMemo } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Text, Box, Sphere, Cylinder } from "@react-three/drei"
+import { Physics, useBox, useSphere } from "@react-three/cannon"
+import type * as THREE from "three"
 import { Button } from "@/components/ui/button"
-import { RefreshCw } from "lucide-react"
 
-export function FlightSimulator() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [gameState, setGameState] = useState({
-    isGameStarted: false,
-    isGameOver: false,
-    score: 0,
-  })
-  const [flightStats, setFlightStats] = useState({
-    altitude: 1000,
-    speed: 200,
-    fuel: 100,
-    heading: 0,
-    pitch: 0,
-    roll: 0,
-  })
+interface GameState {
+  score: number
+  isGameOver: boolean
+  isGameStarted: boolean
+  altitude: number
+  speed: number
+  fuel: number
+  heading: number
+}
 
-  const gameStateRef = useRef({
-    plane: {
-      x: 0,
-      y: 1000,
-      z: 0,
-      vx: 0,
-      vy: 0,
-      vz: 200,
-      pitch: 0,
-      roll: 0,
-      yaw: 0,
-      throttle: 0.5,
-      flaps: 0,
-    },
-    camera: {
-      x: 0,
-      y: 1020,
-      z: -150,
-      targetX: 0,
-      targetY: 1000,
-      targetZ: 0,
-    },
-    keys: new Set(),
-    clouds: [],
-    mountains: [],
-    runways: [],
-    checkpoints: [],
-    particles: [],
-    time: 0,
-    weather: {
-      windX: 0,
-      windZ: 0,
-      turbulence: 0,
-    },
+// 飞机组件
+function Aircraft({
+  position,
+  onPositionUpdate,
+}: {
+  position: [number, number, number]
+  onPositionUpdate: (pos: [number, number, number], altitude: number, speed: number, heading: number) => void
+}) {
+  const [aircraftRef, api] = useBox(() => ({
+    mass: 500,
+    position,
+    args: [6, 1.5, 10],
+    material: { friction: 0.1 },
+    userData: { type: "aircraft" },
+  }))
+
+  const propellerRef = useRef<THREE.Group>(null)
+  const keys = useRef({
+    throttleUp: false,
+    throttleDown: false,
+    pitchUp: false,
+    pitchDown: false,
+    rollLeft: false,
+    rollRight: false,
+    yawLeft: false,
+    yawRight: false,
   })
 
-  // 初始化游戏
-  const initGame = () => {
-    const state = gameStateRef.current
+  const currentPosition = useRef(position)
+  const currentRotation = useRef({ x: 0, y: 0, z: 0 })
+  const throttle = useRef(0.5)
+  const velocity = useRef({ x: 0, y: 0, z: 0 })
 
-    // 重置飞机状态
-    state.plane = {
-      x: 0,
-      y: 1000,
-      z: 0,
-      vx: 0,
-      vy: 0,
-      vz: 200,
-      pitch: 0,
-      roll: 0,
-      yaw: 0,
-      throttle: 0.5,
-      flaps: 0,
-    }
-
-    // 生成云朵
-    state.clouds = []
-    for (let i = 0; i < 30; i++) {
-      state.clouds.push({
-        x: (Math.random() - 0.5) * 5000,
-        y: 800 + Math.random() * 800,
-        z: (Math.random() - 0.5) * 5000,
-        size: 50 + Math.random() * 100,
-        opacity: 0.3 + Math.random() * 0.4,
-      })
-    }
-
-    // 生成山脉
-    state.mountains = []
-    for (let i = 0; i < 50; i++) {
-      state.mountains.push({
-        x: (Math.random() - 0.5) * 8000,
-        y: 0,
-        z: (Math.random() - 0.5) * 8000,
-        height: 200 + Math.random() * 600,
-        width: 100 + Math.random() * 200,
-        color: `hsl(${120 + Math.random() * 60}, 40%, ${30 + Math.random() * 20}%)`,
-      })
-    }
-
-    // 生成跑道
-    state.runways = [
-      {
-        x: 0,
-        y: 0,
-        z: 2000,
-        width: 50,
-        length: 800,
-        heading: 0,
-      },
-      {
-        x: -1500,
-        y: 0,
-        z: -1000,
-        width: 40,
-        length: 600,
-        heading: Math.PI / 4,
-      },
-    ]
-
-    // 生成检查点
-    state.checkpoints = []
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * Math.PI * 2) / 8
-      state.checkpoints.push({
-        x: Math.cos(angle) * 2000,
-        y: 800 + Math.random() * 400,
-        z: Math.sin(angle) * 2000,
-        collected: false,
-        rotation: 0,
-      })
-    }
-
-    state.particles = []
-    state.time = 0
-
-    // 设置天气
-    state.weather = {
-      windX: (Math.random() - 0.5) * 20,
-      windZ: (Math.random() - 0.5) * 20,
-      turbulence: Math.random() * 0.5,
-    }
-
-    setGameState({
-      isGameStarted: true,
-      isGameOver: false,
-      score: 0,
-    })
-
-    setFlightStats({
-      altitude: 1000,
-      speed: 200,
-      fuel: 100,
-      heading: 0,
-      pitch: 0,
-      roll: 0,
-    })
-  }
-
-  // 游戏循环
-  useEffect(() => {
-    if (!gameState.isGameStarted || !canvasRef.current) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
-
-    let animationId: number
-
-    const gameLoop = () => {
-      const state = gameStateRef.current
-      state.time += 0.016
-
-      // 更新飞机物理
-      updatePlanePhysics(state)
-
-      // 更新相机
-      updateCamera(state)
-
-      // 更新粒子和效果
-      updateEffects(state)
-
-      // 检测碰撞和事件
-      checkEvents(state)
-
-      // 渲染场景
-      render(ctx, canvas, state)
-
-      // 更新UI状态
-      updateUI(state)
-
-      if (!gameState.isGameOver) {
-        animationId = requestAnimationFrame(gameLoop)
-      }
-    }
-
-    gameLoop()
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId)
-      }
-    }
-  }, [gameState.isGameStarted, gameState.isGameOver])
-
-  // 更新飞机物理
-  const updatePlanePhysics = (state: any) => {
-    const plane = state.plane
-    const keys = state.keys
-    const weather = state.weather
-
-    // 油门控制
-    if (keys.has("w") || keys.has("W")) plane.throttle = Math.min(plane.throttle + 0.01, 1)
-    if (keys.has("s") || keys.has("S")) plane.throttle = Math.max(plane.throttle - 0.01, 0)
-
-    // 姿态控制
-    if (keys.has("ArrowUp")) plane.pitch = Math.max(plane.pitch - 0.01, -0.5)
-    if (keys.has("ArrowDown")) plane.pitch = Math.min(plane.pitch + 0.01, 0.5)
-    if (keys.has("ArrowLeft")) plane.roll = Math.max(plane.roll - 0.02, -0.8)
-    if (keys.has("ArrowRight")) plane.roll = Math.min(plane.roll + 0.02, 0.8)
-    if (keys.has("a") || keys.has("A")) plane.yaw -= 0.01
-    if (keys.has("d") || keys.has("D")) plane.yaw += 0.01
-
-    // 自动回正
-    if (!keys.has("ArrowLeft") && !keys.has("ArrowRight")) {
-      plane.roll *= 0.95
-    }
-    if (!keys.has("ArrowUp") && !keys.has("ArrowDown")) {
-      plane.pitch *= 0.98
-    }
-
-    // 空气动力学
-    const airspeed = Math.sqrt(plane.vx ** 2 + plane.vy ** 2 + plane.vz ** 2)
-    const thrust = plane.throttle * 500
-    const drag = airspeed * airspeed * 0.01
-    const lift = airspeed * airspeed * 0.02 * Math.cos(plane.pitch)
-
-    // 推力
-    plane.vx += Math.sin(plane.yaw) * thrust * 0.001
-    plane.vz += Math.cos(plane.yaw) * thrust * 0.001
-
-    // 升力和重力
-    const gravity = -9.8
-    plane.vy += (lift - gravity - drag * Math.sin(plane.pitch)) * 0.01
-
-    // 阻力
-    plane.vx *= 0.999
-    plane.vz *= 0.999
-    plane.vy *= 0.995
-
-    // 风力影响
-    plane.vx += weather.windX * 0.01
-    plane.vz += weather.windZ * 0.01
-
-    // 湍流
-    if (weather.turbulence > 0) {
-      plane.vx += (Math.random() - 0.5) * weather.turbulence
-      plane.vy += (Math.random() - 0.5) * weather.turbulence
-      plane.vz += (Math.random() - 0.5) * weather.turbulence
-    }
-
-    // 更新位置
-    plane.x += plane.vx * 0.016
-    plane.y += plane.vy * 0.016
-    plane.z += plane.vz * 0.016
-
-    // 地面碰撞
-    if (plane.y < 10) {
-      plane.y = 10
-      plane.vy = Math.max(plane.vy, 0)
-      // 检查是否在跑道上
-      const onRunway = state.runways.some((runway: any) => {
-        const dx = plane.x - runway.x
-        const dz = plane.z - runway.z
-        return Math.abs(dx) < runway.width && Math.abs(dz) < runway.length / 2
-      })
-      if (!onRunway && airspeed > 50) {
-        // 坠毁
-        setGameState((prev) => ({ ...prev, isGameOver: true }))
-      }
-    }
-
-    // 添加引擎尾迹
-    if (plane.throttle > 0.3 && Math.random() < 0.5) {
-      state.particles.push({
-        x: plane.x - Math.sin(plane.yaw) * 20,
-        y: plane.y - 5,
-        z: plane.z - Math.cos(plane.yaw) * 20,
-        vx: -Math.sin(plane.yaw) * 10 + (Math.random() - 0.5) * 5,
-        vy: -2 + Math.random() * 2,
-        vz: -Math.cos(plane.yaw) * 10 + (Math.random() - 0.5) * 5,
-        life: 1,
-        maxLife: 1,
-        size: 3 + Math.random() * 4,
-        color: "rgba(200, 200, 200, 0.6)",
-      })
-    }
-  }
-
-  // 更新相机
-  const updateCamera = (state: any) => {
-    const camera = state.camera
-    const plane = state.plane
-
-    // 第三人称跟随相机
-    const distance = 150
-    const height = 30
-
-    camera.targetX = plane.x - Math.sin(plane.yaw) * distance
-    camera.targetY = plane.y + height
-    camera.targetZ = plane.z - Math.cos(plane.yaw) * distance
-
-    // 平滑跟随
-    camera.x += (camera.targetX - camera.x) * 0.05
-    camera.y += (camera.targetY - camera.y) * 0.05
-    camera.z += (camera.targetZ - camera.z) * 0.05
-  }
-
-  // 更新效果
-  const updateEffects = (state: any) => {
-    // 更新粒子
-    state.particles = state.particles.filter((particle: any) => {
-      particle.x += particle.vx * 0.016
-      particle.y += particle.vy * 0.016
-      particle.z += particle.vz * 0.016
-      particle.life -= 0.02
-      return particle.life > 0
-    })
-
-    // 更新检查点旋转
-    state.checkpoints.forEach((checkpoint: any) => {
-      checkpoint.rotation += 0.03
-    })
-  }
-
-  // 检测事件
-  const checkEvents = (state: any) => {
-    const plane = state.plane
-
-    // 检测检查点
-    state.checkpoints.forEach((checkpoint: any) => {
-      if (!checkpoint.collected) {
-        const dx = plane.x - checkpoint.x
-        const dy = plane.y - checkpoint.y
-        const dz = plane.z - checkpoint.z
-        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
-
-        if (distance < 50) {
-          checkpoint.collected = true
-          setGameState((prev) => ({ ...prev, score: prev.score + 100 }))
-
-          // 添加收集特效
-          for (let i = 0; i < 15; i++) {
-            state.particles.push({
-              x: checkpoint.x,
-              y: checkpoint.y,
-              z: checkpoint.z,
-              vx: (Math.random() - 0.5) * 20,
-              vy: Math.random() * 15,
-              vz: (Math.random() - 0.5) * 20,
-              life: 1,
-              maxLife: 1,
-              size: 4 + Math.random() * 6,
-              color: "rgba(255, 215, 0, 0.9)",
-            })
-          }
-        }
-      }
-    })
-
-    // 燃料消耗
-    const fuelConsumption = state.plane.throttle * 0.02
-    setFlightStats((prev) => ({
-      ...prev,
-      fuel: Math.max(0, prev.fuel - fuelConsumption),
-    }))
-  }
-
-  // 3D投影函数
-  const project3D = (x: number, y: number, z: number, camera: any, canvas: HTMLCanvasElement) => {
-    const dx = x - camera.x
-    const dy = y - camera.y
-    const dz = z - camera.z
-
-    if (dz <= 0) return null
-
-    const fov = 1000
-    const screenX = canvas.width / 2 + (dx * fov) / dz
-    const screenY = canvas.height / 2 - (dy * fov) / dz
-    const scale = fov / dz
-
-    return { x: screenX, y: screenY, scale, distance: dz }
-  }
-
-  // 渲染场景
-  const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: any) => {
-    // 绘制天空
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-    gradient.addColorStop(0, "#87CEEB")
-    gradient.addColorStop(0.3, "#98FB98")
-    gradient.addColorStop(1, "#228B22")
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // 收集所有3D对象并按距离排序
-    const objects: any[] = []
-
-    // 添加地面
-    const groundLevel = project3D(0, 0, 0, state.camera, canvas)
-    if (groundLevel) {
-      ctx.fillStyle = "#90EE90"
-      ctx.fillRect(0, groundLevel.y, canvas.width, canvas.height - groundLevel.y)
-    }
-
-    // 添加山脉
-    state.mountains.forEach((mountain: any) => {
-      const projected = project3D(mountain.x, mountain.y + mountain.height / 2, mountain.z, state.camera, canvas)
-      if (projected) {
-        objects.push({
-          ...projected,
-          type: "mountain",
-          data: mountain,
-        })
-      }
-    })
-
-    // 添加跑道
-    state.runways.forEach((runway: any) => {
-      const projected = project3D(runway.x, runway.y, runway.z, state.camera, canvas)
-      if (projected) {
-        objects.push({
-          ...projected,
-          type: "runway",
-          data: runway,
-        })
-      }
-    })
-
-    // 添加云朵
-    state.clouds.forEach((cloud: any) => {
-      const projected = project3D(cloud.x, cloud.y, cloud.z, state.camera, canvas)
-      if (projected) {
-        objects.push({
-          ...projected,
-          type: "cloud",
-          data: cloud,
-        })
-      }
-    })
-
-    // 添加检查点
-    state.checkpoints.forEach((checkpoint: any) => {
-      if (!checkpoint.collected) {
-        const projected = project3D(checkpoint.x, checkpoint.y, checkpoint.z, state.camera, canvas)
-        if (projected) {
-          objects.push({
-            ...projected,
-            type: "checkpoint",
-            data: checkpoint,
-          })
-        }
-      }
-    })
-
-    // 添加飞机
-    const planeProjected = project3D(state.plane.x, state.plane.y, state.plane.z, state.camera, canvas)
-    if (planeProjected) {
-      objects.push({
-        ...planeProjected,
-        type: "plane",
-        data: state.plane,
-      })
-    }
-
-    // 添加粒子
-    state.particles.forEach((particle: any) => {
-      const projected = project3D(particle.x, particle.y, particle.z, state.camera, canvas)
-      if (projected) {
-        objects.push({
-          ...projected,
-          type: "particle",
-          data: particle,
-        })
-      }
-    })
-
-    // 按距离排序
-    objects.sort((a, b) => b.distance - a.distance)
-
-    // 渲染所有对象
-    objects.forEach((obj) => {
-      switch (obj.type) {
-        case "mountain":
-          renderMountain(ctx, obj)
-          break
-        case "runway":
-          renderRunway(ctx, obj)
-          break
-        case "cloud":
-          renderCloud(ctx, obj)
-          break
-        case "checkpoint":
-          renderCheckpoint(ctx, obj)
-          break
-        case "plane":
-          renderPlane(ctx, obj)
-          break
-        case "particle":
-          renderParticle(ctx, obj)
-          break
-      }
-    })
-
-    // 绘制HUD
-    renderHUD(ctx, canvas, state)
-  }
-
-  // 渲染山脉
-  const renderMountain = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const width = scale * data.width * 0.5
-    const height = scale * data.height * 0.5
-
-    ctx.fillStyle = data.color
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-    ctx.lineTo(x - width / 2, y + height)
-    ctx.lineTo(x + width / 2, y + height)
-    ctx.closePath()
-    ctx.fill()
-  }
-
-  // 渲染跑道
-  const renderRunway = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const width = scale * data.width
-    const length = scale * data.length
-
-    ctx.fillStyle = "#333"
-    ctx.fillRect(x - width / 2, y - length / 2, width, length)
-
-    // 跑道标线
-    ctx.fillStyle = "white"
-    for (let i = -length / 2; i < length / 2; i += 20) {
-      ctx.fillRect(x - 2, y + i, 4, 10)
-    }
-  }
-
-  // 渲染云朵
-  const renderCloud = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const size = scale * data.size * 0.3
-
-    ctx.fillStyle = `rgba(255, 255, 255, ${data.opacity})`
-    ctx.beginPath()
-    ctx.arc(x, y, size, 0, Math.PI * 2)
-    ctx.fill()
-  }
-
-  // 渲染检查点
-  const renderCheckpoint = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const size = scale * 20
-
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.rotate(data.rotation)
-
-    // 绘制环形检查点
-    ctx.strokeStyle = "gold"
-    ctx.lineWidth = 4
-    ctx.beginPath()
-    ctx.arc(0, 0, size, 0, Math.PI * 2)
-    ctx.stroke()
-
-    ctx.strokeStyle = "orange"
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2)
-    ctx.stroke()
-
-    ctx.restore()
-  }
-
-  // 渲染飞机
-  const renderPlane = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const size = scale * 15
-
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.rotate(data.yaw)
-
-    // 绘制飞机机身
-    ctx.fillStyle = "#4169E1"
-    ctx.fillRect(-size / 2, -size / 6, size, size / 3)
-
-    // 绘制机翼
-    ctx.fillStyle = "#1E90FF"
-    ctx.fillRect(-size * 0.8, -size / 12, size * 1.6, size / 6)
-
-    // 绘制尾翼
-    ctx.fillRect(-size * 0.4, -size / 3, size / 6, size / 2)
-
-    ctx.restore()
-  }
-
-  // 渲染粒子
-  const renderParticle = (ctx: CanvasRenderingContext2D, obj: any) => {
-    const { x, y, scale, data } = obj
-    const size = scale * data.size * (data.life / data.maxLife)
-
-    ctx.fillStyle = data.color
-    ctx.beginPath()
-    ctx.arc(x, y, size, 0, Math.PI * 2)
-    ctx.fill()
-  }
-
-  // 渲染HUD
-  const renderHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: any) => {
-    // 仪表盘背景
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)"
-    ctx.fillRect(10, 10, 250, 140)
-
-    ctx.fillStyle = "white"
-    ctx.font = "14px monospace"
-    ctx.fillText(`高度: ${Math.round(state.plane.y)}ft`, 20, 30)
-    ctx.fillText(`空速: ${Math.round(Math.sqrt(state.plane.vx ** 2 + state.plane.vz ** 2))}kt`, 20, 50)
-    ctx.fillText(`燃料: ${Math.round(flightStats.fuel)}%`, 20, 70)
-    ctx.fillText(`油门: ${Math.round(state.plane.throttle * 100)}%`, 20, 90)
-    ctx.fillText(`俯仰: ${Math.round(state.plane.pitch * 57.3)}°`, 20, 110)
-    ctx.fillText(`横滚: ${Math.round(state.plane.roll * 57.3)}°`, 20, 130)
-
-    // 人工地平仪
-    ctx.save()
-    ctx.translate(canvas.width - 100, 100)
-    ctx.rotate(state.plane.roll)
-
-    // 天空
-    ctx.fillStyle = "#87CEEB"
-    ctx.fillRect(-50, -50 - state.plane.pitch * 100, 100, 50 + state.plane.pitch * 100)
-
-    // 地面
-    ctx.fillStyle = "#8B4513"
-    ctx.fillRect(-50, -state.plane.pitch * 100, 100, 50 + state.plane.pitch * 100)
-
-    // 地平线
-    ctx.strokeStyle = "white"
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(-50, -state.plane.pitch * 100)
-    ctx.lineTo(50, -state.plane.pitch * 100)
-    ctx.stroke()
-
-    ctx.restore()
-
-    // 飞机符号
-    ctx.strokeStyle = "yellow"
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(canvas.width - 120, 100)
-    ctx.lineTo(canvas.width - 80, 100)
-    ctx.moveTo(canvas.width - 100, 85)
-    ctx.lineTo(canvas.width - 100, 115)
-    ctx.stroke()
-  }
-
-  // 更新UI状态
-  const updateUI = (state: any) => {
-    setFlightStats((prev) => ({
-      ...prev,
-      altitude: Math.round(state.plane.y),
-      speed: Math.round(Math.sqrt(state.plane.vx ** 2 + state.plane.vz ** 2)),
-      heading: Math.round((((state.plane.yaw * 57.3) % 360) + 360) % 360),
-      pitch: Math.round(state.plane.pitch * 57.3),
-      roll: Math.round(state.plane.roll * 57.3),
-    }))
-  }
-
-  // 键盘事件处理
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      gameStateRef.current.keys.add(e.key)
-      e.preventDefault()
+      switch (e.key.toLowerCase()) {
+        case "w":
+          keys.current.throttleUp = true
+          break
+        case "s":
+          keys.current.throttleDown = true
+          break
+        case "arrowup":
+          keys.current.pitchUp = true
+          break
+        case "arrowdown":
+          keys.current.pitchDown = true
+          break
+        case "arrowleft":
+          keys.current.rollLeft = true
+          break
+        case "arrowright":
+          keys.current.rollRight = true
+          break
+        case "a":
+          keys.current.yawLeft = true
+          break
+        case "d":
+          keys.current.yawRight = true
+          break
+      }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      gameStateRef.current.keys.delete(e.key)
+      switch (e.key.toLowerCase()) {
+        case "w":
+          keys.current.throttleUp = false
+          break
+        case "s":
+          keys.current.throttleDown = false
+          break
+        case "arrowup":
+          keys.current.pitchUp = false
+          break
+        case "arrowdown":
+          keys.current.pitchDown = false
+          break
+        case "arrowleft":
+          keys.current.rollLeft = false
+          break
+        case "arrowright":
+          keys.current.rollRight = false
+          break
+        case "a":
+          keys.current.yawLeft = false
+          break
+        case "d":
+          keys.current.yawRight = false
+          break
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown)
@@ -702,28 +120,364 @@ export function FlightSimulator() {
     }
   }, [])
 
-  // 重新开始游戏
+  useFrame(() => {
+    if (!api) return
+
+    // 油门控制
+    if (keys.current.throttleUp) throttle.current = Math.min(1, throttle.current + 0.01)
+    if (keys.current.throttleDown) throttle.current = Math.max(0, throttle.current - 0.01)
+
+    // 姿态控制
+    if (keys.current.pitchUp) currentRotation.current.x = Math.max(-0.3, currentRotation.current.x - 0.015)
+    if (keys.current.pitchDown) currentRotation.current.x = Math.min(0.3, currentRotation.current.x + 0.015)
+    if (keys.current.rollLeft) currentRotation.current.z = Math.max(-0.5, currentRotation.current.z - 0.02)
+    if (keys.current.rollRight) currentRotation.current.z = Math.min(0.5, currentRotation.current.z + 0.02)
+    if (keys.current.yawLeft) currentRotation.current.y += 0.015
+    if (keys.current.yawRight) currentRotation.current.y -= 0.015
+
+    // 自动回正
+    if (!keys.current.pitchUp && !keys.current.pitchDown) {
+      currentRotation.current.x *= 0.98
+    }
+    if (!keys.current.rollLeft && !keys.current.rollRight) {
+      currentRotation.current.z *= 0.95
+    }
+
+    // 飞行物理
+    const thrust = throttle.current * 25
+    const airspeed = Math.sqrt(velocity.current.x ** 2 + velocity.current.z ** 2)
+    const lift = Math.max(0, airspeed * 0.8 - 9.8) // 升力减去重力
+
+    // 推力方向
+    const thrustX = Math.sin(currentRotation.current.y) * thrust * Math.cos(currentRotation.current.x)
+    const thrustY = Math.sin(currentRotation.current.x) * thrust + lift
+    const thrustZ = Math.cos(currentRotation.current.y) * thrust * Math.cos(currentRotation.current.x)
+
+    // 更新速度
+    velocity.current.x += thrustX * 0.016
+    velocity.current.y += thrustY * 0.016
+    velocity.current.z += thrustZ * 0.016
+
+    // 应用阻力
+    velocity.current.x *= 0.98
+    velocity.current.y *= 0.98
+    velocity.current.z *= 0.98
+
+    // 更新位置
+    currentPosition.current[0] += velocity.current.x * 0.016
+    currentPosition.current[1] += velocity.current.y * 0.016
+    currentPosition.current[2] += velocity.current.z * 0.016
+
+    // 限制高度
+    if (currentPosition.current[1] < 5) {
+      currentPosition.current[1] = 5
+      velocity.current.y = Math.max(0, velocity.current.y)
+    }
+
+    api.position.set(currentPosition.current[0], currentPosition.current[1], currentPosition.current[2])
+    api.rotation.set(currentRotation.current.x, currentRotation.current.y, currentRotation.current.z)
+
+    // 螺旋桨动画
+    if (propellerRef.current) {
+      propellerRef.current.rotation.z += throttle.current * 2
+    }
+
+    // 计算速度和航向
+    const speed = Math.sqrt(velocity.current.x ** 2 + velocity.current.y ** 2 + velocity.current.z ** 2) * 3.6
+    const heading = currentRotation.current.y * 57.3
+
+    onPositionUpdate(currentPosition.current, currentPosition.current[1], speed, heading)
+  })
+
+  return (
+    <group ref={aircraftRef}>
+      {/* 机身 */}
+      <Box args={[1.5, 1, 10]} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#4169E1" />
+      </Box>
+
+      {/* 机翼 */}
+      <Box args={[12, 0.3, 3]} position={[0, 0, 1]}>
+        <meshStandardMaterial color="#1E90FF" />
+      </Box>
+
+      {/* 尾翼 */}
+      <Box args={[4, 0.2, 1.5]} position={[0, 0, -4]}>
+        <meshStandardMaterial color="#1E90FF" />
+      </Box>
+      <Box args={[0.8, 3, 1.5]} position={[0, 1.5, -4]}>
+        <meshStandardMaterial color="#1E90FF" />
+      </Box>
+
+      {/* 驾驶舱 */}
+      <Sphere args={[0.8]} position={[0, 0.6, 1.5]}>
+        <meshStandardMaterial color="#87CEEB" transparent opacity={0.7} />
+      </Sphere>
+
+      {/* 引擎 */}
+      <Cylinder args={[0.6, 0.6, 1.5]} position={[0, 0, 5]} rotation={[Math.PI / 2, 0, 0]}>
+        <meshStandardMaterial color="#333333" />
+      </Cylinder>
+
+      {/* 螺旋桨 */}
+      <group ref={propellerRef} position={[0, 0, 5.8]}>
+        <Box args={[0.1, 0.05, 3]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="#888888" />
+        </Box>
+        <Box args={[3, 0.05, 0.1]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="#888888" />
+        </Box>
+      </group>
+
+      {/* 导航灯 */}
+      <Sphere args={[0.1]} position={[-6, 0, 1]}>
+        <meshBasicMaterial color="#ff0000" />
+      </Sphere>
+      <Sphere args={[0.1]} position={[6, 0, 1]}>
+        <meshBasicMaterial color="#00ff00" />
+      </Sphere>
+    </group>
+  )
+}
+
+// 山脉组件
+function Mountain({ position, size }: { position: [number, number, number]; size: [number, number, number] }) {
+  const [mountainRef] = useBox(() => ({
+    mass: 0,
+    position: [position[0], position[1] + size[1] / 2, position[2]],
+    args: size,
+  }))
+
+  return (
+    <group ref={mountainRef}>
+      <Box args={size} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#8B7355" />
+      </Box>
+    </group>
+  )
+}
+
+// 检查点组件
+function Checkpoint({ position, onPass }: { position: [number, number, number]; onPass: () => void }) {
+  const [checkpointRef] = useSphere(() => ({
+    mass: 0,
+    position,
+    args: [5],
+    isTrigger: true,
+    onCollide: (e) => {
+      if (e.body.userData?.type === "aircraft") {
+        onPass()
+      }
+    },
+  }))
+
+  const meshRef = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.01
+    }
+  })
+
+  return (
+    <group ref={checkpointRef}>
+      <group ref={meshRef}>
+        {/* 检查点环 */}
+        <mesh>
+          <torusGeometry args={[8, 1, 8, 32]} />
+          <meshBasicMaterial color="#ffff00" />
+        </mesh>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[8, 1, 8, 32]} />
+          <meshBasicMaterial color="#ff6600" />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+// 3D 飞行场景
+function FlightScene({
+  gameState,
+  setGameState,
+}: {
+  gameState: GameState
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>
+}) {
+  const [aircraftPosition, setAircraftPosition] = useState<[number, number, number]>([0, 50, 0])
+  const [checkpoints, setCheckpoints] = useState<
+    Array<{ id: number; position: [number, number, number]; passed: boolean }>
+  >([])
+  const { camera } = useThree()
+
+  const checkpointIdRef = useRef(0)
+
+  useEffect(() => {
+    // 生成检查点
+    const newCheckpoints = []
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI * 2) / 6
+      newCheckpoints.push({
+        id: checkpointIdRef.current++,
+        position: [Math.cos(angle) * 150, 50 + Math.random() * 60, Math.sin(angle) * 150] as [number, number, number],
+        passed: false,
+      })
+    }
+    setCheckpoints(newCheckpoints)
+  }, [])
+
+  const handlePositionUpdate = (pos: [number, number, number], altitude: number, speed: number, heading: number) => {
+    setAircraftPosition(pos)
+    setGameState((prev) => ({
+      ...prev,
+      altitude,
+      speed,
+      heading,
+      fuel: Math.max(0, prev.fuel - 0.003),
+    }))
+
+    // 相机跟随
+    camera.position.set(pos[0] - 40, pos[1] + 20, pos[2] - 40)
+    camera.lookAt(pos[0], pos[1], pos[2])
+  }
+
+  const handleCheckpointPass = (checkpointId: number) => {
+    setCheckpoints((prev) => prev.map((cp) => (cp.id === checkpointId ? { ...cp, passed: true } : cp)))
+    setGameState((prev) => ({ ...prev, score: prev.score + 500 }))
+  }
+  const mountains = useMemo(() => {
+      return Array.from({ length :25 }).map((_ ,i) =>{
+        const x = (Math.random() - 0.5) * 800
+        const z = (Math.random() - 0.5) * 800
+  
+        if(Math.abs(x%80)<20 || Math.abs(z%80)<20) return null;
+        
+        const height = 30 + Math.random() * 100
+        const width = 20 + Math.random() * 40
+        const depth = 20 + Math.random() * 40
+  
+        return <Mountain key={i} position={[x, 0, z]} size={[width, height, depth]} />
+      }).filter(Boolean);
+    }, []);
+  return (
+    <>
+      {/* 光照 */}
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[100, 100, 100]} intensity={0.8} />
+
+      {/* 地面 */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[1000, 1000]} />
+        <meshStandardMaterial color="#228B22" />
+      </mesh>
+
+      {/* 山脉 */}
+      {mountains}
+
+      {/* 跑道 */}
+      <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[20, 200]} />
+        <meshStandardMaterial color="#333333" />
+      </mesh>
+
+      {/* 跑道标线 */}
+      {Array.from({ length: 20 }).map((_, i) => (
+        <mesh key={i} position={[0, 0.11, (i - 10) * 10]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[2, 4]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+      ))}
+
+      {/* 飞机 */}
+      <Aircraft position={[0, 50, 0]} onPositionUpdate={handlePositionUpdate} />
+
+      {/* 检查点 */}
+      {checkpoints
+        .filter((cp) => !cp.passed)
+        .map((checkpoint) => (
+          <Checkpoint
+            key={checkpoint.id}
+            position={checkpoint.position}
+            onPass={() => handleCheckpointPass(checkpoint.id)}
+          />
+        ))}
+
+      {/* UI 文本 */}
+      <Text
+        position={[aircraftPosition[0] - 40, aircraftPosition[1] + 25, aircraftPosition[2] - 20]}
+        fontSize={3}
+        color="white"
+        anchorX="left"
+        anchorY="top"
+      >
+        {`高度: ${Math.round(gameState.altitude)}ft`}
+      </Text>
+
+      <Text
+        position={[aircraftPosition[0], aircraftPosition[1] + 25, aircraftPosition[2] - 20]}
+        fontSize={3}
+        color="white"
+        anchorX="center"
+        anchorY="top"
+      >
+        {`空速: ${Math.round(gameState.speed)} kt`}
+      </Text>
+
+      <Text
+        position={[aircraftPosition[0] + 40, aircraftPosition[1] + 25, aircraftPosition[2] - 20]}
+        fontSize={3}
+        color="white"
+        anchorX="right"
+        anchorY="top"
+      >
+        {`燃料: ${Math.round(gameState.fuel)}%`}
+      </Text>
+    </>
+  )
+}
+
+export function FlightSimulator() {
+  const [gameState, setGameState] = useState<GameState>({
+    score: 0,
+    isGameOver: false,
+    isGameStarted: false,
+    altitude: 50,
+    speed: 0,
+    fuel: 100,
+    heading: 0,
+  })
+
+  const startGame = () => {
+    setGameState({
+      score: 0,
+      isGameOver: false,
+      isGameStarted: true,
+      altitude: 50,
+      speed: 0,
+      fuel: 100,
+      heading: 0,
+    })
+  }
+
   const restartGame = () => {
-    initGame()
+    startGame()
   }
 
   return (
     <div className="flex flex-col items-center w-full">
       <div className="flex justify-between w-full mb-4">
         <div className="text-lg font-bold">分数: {gameState.score}</div>
-        <div className="text-sm">
-          高度: {flightStats.altitude}ft | 空速: {flightStats.speed}kt | 燃料: {flightStats.fuel}%
-        </div>
+        <div className="text-lg font-bold">高度: {Math.round(gameState.altitude)}ft</div>
+        <div className="text-lg font-bold">燃料: {Math.round(gameState.fuel)}%</div>
       </div>
 
-      <div className="relative w-full" style={{ height: "400px" }}>
-        {!gameState.isGameStarted && (
+      <div className="relative w-full" style={{ height: "600px" }}>
+        {!gameState.isGameStarted && !gameState.isGameOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-10">
-            <h3 className="text-xl font-bold mb-4">飞行模拟器</h3>
-            <p className="text-center mb-4">
-              使用W/S控制油门，方向键控制飞机姿态，A/D控制偏航。通过金色检查点获得分数！
-            </p>
-            <Button onClick={initGame}>开始飞行</Button>
+            <h3 className="text-xl font-bold mb-4">3D 飞行模拟器</h3>
+            <p className="text-center mb-4">使用WS控制油门，方向键控制飞机姿态，AD控制偏航！</p>
+            <p className="text-center mb-4 text-sm text-muted-foreground">通过黄色检查点获得分数，体验流畅飞行！</p>
+            <Button onClick={startGame}>开始飞行</Button>
           </div>
         )}
 
@@ -735,19 +489,17 @@ export function FlightSimulator() {
           </div>
         )}
 
-        <canvas ref={canvasRef} className="w-full h-full border rounded-md bg-sky-300" />
+        {gameState.isGameStarted && !gameState.isGameOver && (
+          <Canvas camera={{ position: [-40, 70, -40], fov: 75 }} className="w-full h-full">
+            <Physics gravity={[0, -9.8, 0]} broadphase="Naive">
+              <FlightScene gameState={gameState} setGameState={setGameState} />
+            </Physics>
+          </Canvas>
+        )}
       </div>
 
-      {gameState.isGameStarted && !gameState.isGameOver && (
-        <div className="mt-4 flex justify-center">
-          <Button variant="outline" onClick={restartGame}>
-            <RefreshCw className="w-4 h-4 mr-1" /> 重新开始
-          </Button>
-        </div>
-      )}
-
       <div className="mt-4 text-sm text-muted-foreground">
-        <p>控制说明: W/S油门控制，方向键姿态控制，A/D偏航控制。通过金色检查点获得分数，注意燃料和高度！</p>
+        <p>控制说明: WS油门控制，方向键姿态控制，AD偏航控制。通过检查点获得分数！</p>
       </div>
     </div>
   )
